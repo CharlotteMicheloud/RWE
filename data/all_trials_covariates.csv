@@ -1,0 +1,33 @@
+Trial;type;clinical_area;comparator_emulation;outcome_emulation;mean_age_difference;difference_in_perc_female;run_in;placebo_control;in_hospital_start;dose_titration;discontinuation;delayed_effect;close_emulation
+LEADER;NI;Diabetes;Moderate;Good;-3.4;-17.8;Y;Y;N;Y;N;N;Y
+DECLARE;NI;Diabetes;Moderate;Moderate;1.4;-4.9;Y;Y;N;N;N;N;N
+EMPA-REG;NI;Diabetes;Moderate;Good;1.2;-11.9;Y;Y;N;N;N;N;Y
+CANVAS;NI;Diabetes;Moderate;Good;-2;-10.5;Y;Y;N;N;N;N;Y
+CARMELINA;NI;Diabetes;Poor;Good;-6.4;-16.2;N;Y;N;N;N;N;N
+TECOS;NI;Diabetes;Poor;Moderate;-6.8;-18.1;N;Y;N;N;N;N;N
+SAVOR-TIMI;NI;Diabetes;Poor;Good;-3.8;-13.7;N;Y;N;N;N;N;N
+LEAD2;NI;Diabetes;Good;Moderate;-2;-6;Y;N;N;Y;N;N;Y
+TRITON-TIMI;Sup;Antiplatelet;Good;Good;3.4;4.9;N;N;Y;Y;N;N;N
+PLATO;Sup;Antiplatelet;Good;Good;-3.3;-4.1;N;N;Y;Y;N;N;N
+ISAR-REACT5;Sup;Antiplatelet;Good;Good;5.6;0.9;N;N;Y;Y;N;N;N
+ARISTOTLE;NI;DOAC AF;Good;Good;-6.1;-16.7;N;N;N;N;Y;N;Y
+RE-LY;NI;DOAC AF;Good;Good;-4.7;-5.9;N;N;N;N;Y;N;Y
+ROCKET-AF;NI;DOAC AF;Good;Good;-4.5;-14.9;N;N;N;N;Y;N;Y
+EINSTEIN-DVT;NI;DOAC VTE;Good;Moderate;-14.7;-17;N;N;N;Y;N;N;Y
+EINSTEIN-PE;NI;DOAC VTE;Good;Moderate;-8.2;-4.9;N;N;N;Y;N;N;Y
+RECOVER II;NI;DOAC VTE ;Good;Moderate;-13.5;-16.4;N;N;N;N;N;N;Y
+AMPLIFY;NI;DOAC VTE;Good;Moderate;-0.6;-10.1;N;N;N;Y;N;N;Y
+RECORD1;NI;DOAC hip replacement/VTE;Good;Good;1;1.6;N;N;N;N;N;N;Y
+TRANSCEND;Sup;Anti-hypertension;Moderate;Good;-4;-14.1;Y;Y;N;N;N;N;Y
+ON-TARGET;NI;Anti-hypertension;Good;Good;-2.4;-27.2;Y;N;N;Y;N;N;Y
+HORIZON-PIVOTAL;Sup;Osteoporosis;Moderate;Good;-1;0;N;Y;N;N;N;Y;N
+VERO;Sup;Osteoporosis;Good;Moderate;1.1;0;N;N;N;N;N;Y;N
+DAPA-CKD;Sup;CKD;Moderate;Moderate;-5.5;-11.4;N;Y;N;N;N;Y;N
+PARADIGM-HF;Sup;HF;Moderate;Moderate;-4.7;-6.2;Y;N;N;N;Y;N;N
+P04334;Sup;Asthma;Good;Good;-11.2;1.9;Y;N;N;N;Y;N;N
+D5896;NI;Asthma;Good;Good;-3.3;-1.8;N;N;N;N;Y;N;N
+IMPACT;Sup;COPD;Good;Good;-4;-25.5;Y;N;N;N;Y;N;N
+POET-COPD;Sup;COPD;Good;Good;-7.5;-28.3;Y;N;N;N;Y;N;N
+INSPIRE;Sup;COPD;Good;Moderate;-1.5;-44.6;Y;N;N;N;Y;N;N
+CAROLINA;NI;Diabetes;Good;Good;-6.3;-12.3;Y;N;N;Y;N;N;Y
+PRONOUNCE;Sup;Prostate Cancer;Good;Good;-3;0;N;N;N;Y;N;N;Y
