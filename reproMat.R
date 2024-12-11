@@ -109,7 +109,7 @@ as.vector(data_Sup[data_Sup$Type == "RCT",]$line_num)   #for labels -> added as 
   coord_flip()+
   geom_linerange(ymin =-Inf, ymax =Inf, color = 'gray', size=0.3) +
   scale_color_manual(values = c("darkblue","black"),name="Type of study",na.translate = F)+
-  xlab(' ')+ ylab("HR with 95%CI")+
+  xlab(' ')+ ylab("HR with 95%CI (logarithmic scale)") +
   geom_errorbar(aes(ymin= Lower, ymax= Upper,col=Type),width=0.3,cex=0.6)+
   scale_x_continuous(breaks= c(-1,-3,-5,-7,-9,-11,-13,-15,-17,-19,-21),
                      labels= c(
@@ -125,6 +125,7 @@ as.vector(data_Sup[data_Sup$Type == "RCT",]$line_num)   #for labels -> added as 
                        "-19" = "TRANSCEND",
                        "-21" = "TRITON-TIMI"
                      ))+
+  scale_y_continuous(breaks=c(0.1, 0.25, 0.5, 1,2,4), trans = "log10")+
   theme(panel.grid.major.y = element_blank(),
         panel.grid.major.x = element_blank()) +
   theme(axis.text.y = element_text(face="bold", size=10),
@@ -168,7 +169,7 @@ as.vector(data_NI[data_NI$Type == "RCT",]$line_num)   #for labels
     inherit.aes=FALSE,linetype=2
   )+
   scale_color_manual(values = c("darkblue","black"),name=" ",na.translate = F)+
-  xlab(' ')+ ylab("HR with 95%CI")+
+  xlab(' ')+ ylab("HR with 95%CI (logarithmic scale)") +
   geom_errorbar(aes(ymin= Lower, ymax= Upper,col=Type),width=0.3,cex=0.6)+
   scale_x_continuous(breaks= c(-1,-3,-5,-7,-9,-11,-13,-15,-17,-19,-21,-23,-25,-27,-29,-31,-33,-35),
                      labels= c(
@@ -191,6 +192,7 @@ as.vector(data_NI[data_NI$Type == "RCT",]$line_num)   #for labels
                        "-33" = "SAVOR-TIMI",
                        "-35" = "TECOS"
                      ))+
+  scale_y_continuous(breaks=c(0.1, 0.25, 0.5, 1,2,4), trans = "log10")+
   theme(panel.grid.major.y = element_blank(),
         panel.grid.major.x = element_blank()) +
   theme(axis.text.y = element_text(face="bold", size=10),
@@ -201,6 +203,17 @@ as.vector(data_NI[data_NI$Type == "RCT",]$line_num)   #for labels
   )+
   theme(legend.key = element_rect(fill = "white", color = NA),
         legend.position = c(0.12,0.9))
+
+#both plots in one pdf:
+
+layout <- "
+AABB
+AABB
+AABB
+"
+p_total<-p_Sup +  labs(title = "Superiority trials") +
+  p_NI + theme(legend.position="none")+  labs(title = "Noninferiority trials") +
+  plot_layout(design=layout)
 
 
 ################################################################################
