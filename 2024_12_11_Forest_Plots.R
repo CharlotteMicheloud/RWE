@@ -2,9 +2,9 @@
 #				                     	  IBKF Muenster                                     #
 ###################################################################################
 #                                                                                 #
-# Projekt/Study: The Sceptical $P$-value -- A Review                              #
-# Ersterstellung (Author, Date, Institute): Koeppe, J., 06.05.24, IBKF            #
-# Purpose of the programm: creating forest plot for replicated studiesa           #
+# Projekt/Study: Assessing the replicability of RCTs in RWE emulations            #
+# First creation (Author, Date, Institute): Koeppe, J., 06.05.24, IBKF            #
+# Purpose of the programm: creating forest plot for replicated studies            #
 ###################################################################################
 
 ###################################################################################
