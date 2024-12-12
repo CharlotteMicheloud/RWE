@@ -103,7 +103,7 @@ data_Sup[data_Sup$Type== "Pooled RWE",]$line_num= data_Sup[data_Sup$Type== "Pool
 studyNames2 <- unique(data_Sup$Trial)                    #for labels
 as.vector(data_Sup[data_Sup$Type == "RCT",]$line_num)   #for labels -> added as labels for ticks!
 
-  ggplot(data=data_Sup, aes(x =(-line_num),y = Estimate, ymin = Lower, ymax =Upper) )+
+(p_Sup <- ggplot(data=data_Sup, aes(x =(-line_num),y = Estimate, ymin = Lower, ymax =Upper) )+
   geom_hline(aes(),yintercept =1, linetype=2)+
   geom_pointrange(aes(col=Type))+
   coord_flip()+
@@ -136,7 +136,7 @@ as.vector(data_Sup[data_Sup$Type == "RCT",]$line_num)   #for labels -> added as 
   )+
   theme(legend.key = element_rect(fill = "white", color = NA),
         legend.position = c(0.8,0.9))
-
+)
 
 # Non-Inferiority 
   
@@ -153,7 +153,7 @@ studyNames3 <- unique(data_NI$Trial) #for labels
 as.vector(data_NI[data_NI$Type == "RCT",]$line_num)   #for labels
 
 
-  ggplot(data=data_NI, aes(x =(-line_num),y = Estimate, ymin = Lower, ymax =Upper) )+
+  (p_NI <- ggplot(data=data_NI, aes(x =(-line_num),y = Estimate, ymin = Lower, ymax =Upper) )+
   geom_pointrange(aes(col=Type))+
   coord_flip()+
   geom_linerange(ymin =-Inf, ymax =Inf, color = 'gray', size=0.3) +
@@ -202,7 +202,7 @@ as.vector(data_NI[data_NI$Type == "RCT",]$line_num)   #for labels
         legend.background = element_rect(linetype = 1, size = 0.3, colour = 1),
   )+
   theme(legend.key = element_rect(fill = "white", color = NA),
-        legend.position = c(0.12,0.9))
+        legend.position = c(0.12,0.9)))
 
 #both plots in one pdf:
 
@@ -211,16 +211,126 @@ AABB
 AABB
 AABB
 "
-p_total<-p_Sup +  labs(title = "Superiority trials") +
+(p_total<-p_Sup +  labs(title = "Superiority trials") +
   p_NI + theme(legend.position="none")+  labs(title = "Noninferiority trials") +
-  plot_layout(design=layout)
+  plot_layout(design=layout))
 
 
 ################################################################################
 ######################  Figure 2: Sceptical p  #################################
 ################################################################################
 
-  # @ Leo, please add your code
+comparePvalues <- function(thetao = 1,
+                           thetar,
+                           po = 0.025,
+                           lower = NA,
+                           upper = NA) {
+  zo <- p2z(po, alternative = "one.sided")
+  so <- thetao / zo
+  cval <- exp(seq(log(0.1), log(30), length.out = 250))
+  sr <- so / sqrt(cval)
+  ## replication p-values
+  zr <- thetar / sr
+  pr <- z2p(zr, alternative = "one.sided")
+  ## Edgington
+  pE <- (po + 2 * pr) ^ 2 / 4
+  ## Fisher
+  pF <- 1 - pchisq(-2 * log(po * pr), df = 4)
+  ## Meta-analysis
+  zMA <- ((sr * zo) + (so * zr)) / sqrt(so ^ 2 + sr ^ 2)
+  pMA <- 1 - pnorm(zMA)
+  ## 2TR
+  p2TR <- pmax(po, pr) ^ 2
+  zo <- p2z(po, alternative = "one.sided")
+  pSG <- pSceptical(zo, zr, cval, type = "nominal") ^ 2
+  pS <- pSceptical(zo, zr, cval, type = "controlled") ^ 2
+  y <- sqrt(cbind(pSG, pS, p2TR, pF, pMA))
+  if (is.na(lower) | is.na(upper))
+    myylim <- range(y)
+  else
+    myylim <- c(lower, upper)
+  myylim <- c(0.0001, 1)
+  myval <- c(10 ^ (-c(0:5)))
+  matplot(
+    cval,
+    y[, c(3, 2)],
+    col = c(1, 4),
+    lty = 1,
+    type = "l",
+    log = "xy",
+    lwd = 2,
+    ylab = "p-value",
+    ylim = myylim,
+    cex.axis = 0.8,
+    cex.lab = 0.8,
+    xlab = "relative sample size",
+    axes = FALSE
+  )
+  axis(2,
+       cex.axis = 0.8,
+       at = myval,
+       sapply(myval, format, scientific = FALSE))
+  axis(
+    2,
+    at = po,
+    as.character(po),
+    col = "darkgrey",
+    col.axis = "darkgrey",
+    cex.axis = 0.8
+  )
+  box()
+  myc <- c(0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100)
+  mycF <- sapply(myc, format, scientific = FALSE)
+  axis(1, at = myc, mycF, cex.axis = 0.8)
+  abline(h = po,
+         col = "darkgrey",
+         lty = 2)
+  lines(cval, y[, 3], col = 1, lwd = 2)
+  lines(cval, y[, 2], col = 4, lwd = 2)
+  legend(
+    "topright",
+    col = c(4, 1),
+    lwd = 2,
+    lty = 1,
+    legend = c("Sceptical p-value", "Two-trials rule"),
+    cex = 0.7,
+    bg = "white"
+  )
+  title(
+    paste(
+      "Original p-value:",
+      as.character(po),
+      "\n Relative effect size:",
+      as.character(thetar / thetao)
+    ),
+    cex = 0.7
+  )
+  
+}
+
+
+
+par(las = 1, mfrow = c(2, 2))
+comparePvalues(thetar = 1,
+               lower = 1e-3,
+               upper = 1)
+comparePvalues(
+  thetar = 1,
+  po = 0.0025,
+  lower = 1e-3,
+  upper = 1
+)
+comparePvalues(thetar = .75,
+               lower = 1e-3,
+               upper = 1)
+comparePvalues(
+  thetar = .75,
+  po = 0.0025,
+  lower = 1e-3,
+  upper = 1
+)
+
+
 
 
 
