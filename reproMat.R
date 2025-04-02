@@ -27,7 +27,7 @@ library(patchwork)
 
 #load data
 # setwd(path)
-data <- read.csv2("data/all_trials_results.csv", header = TRUE) %>%
+data <- read.csv2("data/all_trials_results_corrected.csv", header = TRUE) %>%
   group_by(Trial, Type) %>%
   mutate(Estimate = as.numeric(str_trim(str_split(pe_95ci,
                                                   "\\(", simplify = TRUE)[1])),
@@ -375,25 +375,27 @@ comparePvalues(
            st_d = (log(RCT$Estimate) -
                      log(RWE$Estimate))/sqrt(RCT$se**2 + RWE$se**2),
            # CM: to avoid problem with PRONOUNCE
+           # JK: For PRONOUNCE, the scep p-val was set to "NA" as the original effect was already on the wrong side (HR>1)
            golden_pS = ifelse(RCT$z < 0, 
                               pSceptical(zo = RCT$z,
                                          zr = RWE$z,
                                          c = RCT$se^2/RWE$se^2,
-                                         type = "golden"),
-                              1 - pSceptical(zo = RCT$z,
-                                             zr = RWE$z,
-                                             c = RCT$se^2/RWE$se^2,
-                                             type = "golden")),
+                                         type = "golden"), NA)),
+                            #  1 - pSceptical(zo = RCT$z,
+                            #                 zr = RWE$z,
+                            #                 c = RCT$se^2/RWE$se^2,
+                            #                type = "golden")),
            # CM: to avoid problem with PRONOUNCE
+           # JK: For PRONOUNCE, the scep p-val was set to "NA" as the original effect was already on the wrong side (HR>1)
            controlled_pS = ifelse(RCT$z < 0, 
                                   pSceptical(zo = RCT$z,
                                              zr = RWE$z,
                                              c = RCT$se^2/RWE$se^2,
-                                             type = "controlled"),
-                                  1 - pSceptical(zo = RCT$z,
-                                                 zr = RWE$z,
-                                                 c = RCT$se^2/RWE$se^2,
-                                                 type = "controlled")), 
+                                             type = "controlled"),NA)),
+                                 # 1 - pSceptical(zo = RCT$z,
+                                 #                zr = RWE$z,
+                                 #                c = RCT$se^2/RWE$se^2,
+                                 #                type = "controlled")), 
            TTR_p = NA,
            varianceRatio = RCT$se^2/RWE$se^2,
            se_o = RCT$se, se_r = RWE$se,
@@ -756,5 +758,153 @@ alpha <-  0.025
   
   
   power_mat_ext
+
+
+
+  ################################################################################
+  ######################  Appendix table B.1        ############################
+  ################################################################################
+
+
+  ######   Determine pooled effect from RCT and RWE using fixed effect meta analysis
+  # Calculate log(Ratio) and SE(log(Ratio))
+  data$log_te = log(data$Estimate)
+  data$se_log_te = (log(data$Upper) - log(data$Lower))/3.92
+
+
+  # META-ANALYSIS FOR all Studies
+  stud_number<-rep(1:29,each=2)
+  data<-data.frame(cbind(stud_number,data))
+
+  # first study seperated to define variables
+
+  submeta <- metagen(TE = log_te,                           # var: effectsize
+                     seTE = se_log_te,   # var: standard error
+                     studlab = Type,                                    # var: Trial
+                     data = filter(data, stud_number == 1),             # dataset
+                     sm = "HR",                                         # underlying summary measure
+                     common = TRUE,                                     # Fixed-Effect Meta-Analysis
+                     random = FALSE,                                    # Random-Effect Meta-Analysis
+                     method.tau = "REML",                               # Estimator for tau^2 (var random effect)
+  )
+
+  Estimate<-exp(summary(submeta)$common$TE)
+  Lower<-exp(summary(submeta)$common$lower)
+  Upper<-exp(summary(submeta)$common$upper)
+
+  for (i in 2:29){
+
+    nam <- paste("submeta", i, sep = "_")
+
+    submeta <- metagen(TE = log_te,                           # var: effectsize
+                       seTE = se_log_te,   # var: standard error
+                       studlab = Type,                                    # var: Trial
+                       data = filter(data, stud_number == i),             #dataset
+                       sm = "HR",                                         # underlying summary measure
+                       common = TRUE,                                     # Fixed-Effect Meta-Analysis
+                       random = FALSE,                                    # Random-Effect Meta-Analysis
+                       method.tau = "REML",                               # Estimator for tau^2 (var random effect)
+    )
+    assign(nam,submeta)
+
+    Estimate<-c(Estimate,exp(summary(submeta)$common$TE))
+    Lower<-c(Lower,exp(summary(submeta)$common$lower))
+    Upper<-c(Upper,exp(summary(submeta)$common$upper))
+
+  }
+
+  stud_number<-rep(1:29)
+  Type<- rep("Meta",29)
+  Trial<- data[data$Type == "RCT",]$Trial
+  study_type<-data[data$Type == "RCT",]$study_type
+  margin<-data[data$Type == "RCT",]$margin
+
+
+
+  dat_meta<-data.frame(stud_number,Trial,Type,Estimate, Lower, Upper,study_type,margin)
+
+  data_new<-bind_rows(data,dat_meta)
+
+  ######   Determine Confidence intervals from sceptical p-value
+  ## computes lower respectively upper bound of one-sided confidence intervals
+  ## at level level based on sceptical p-value
+  ## to, tr: Effektschätzer von original and replication
+  ## so, sr: Standardfehler von original and replication
+  ## c: weitere Faktor.
+
+  ciSceptical <- function(to, tr, so, sr, c = so^2/sr^2, level = 0.975, alternative="greater", ...) {
+    require(ReplicationSuccess, warn.conflict=FALSE)
+    alpha <- 1 - level
+    rootFun <- function(mu) {
+      pSceptical(zo = (to - mu)/so, zr = (tr - mu)/sr, c = c,
+                 alternative = "one.sided", type = "controlled")^2 -
+        alpha
+    }
+    cio <- to + c(-1, 1)*so*stats::qnorm(p = (1 + level)/2)
+    cir <- tr + c(-1, 1)*sr*stats::qnorm(p = (1 + level)/2)
+    lower <- stats::uniroot(f = rootFun, tol = 1e-15,
+                            interval = c(pmin(cio[1], cir[1]), pmin(to, tr)),
+                            ... = ...)$root
+    upper <- stats::uniroot(f = rootFun, tol = 1e-15,
+                            interval = c(pmax(cio[2], cir[2]), pmax(to, tr)),
+                            ... = ...)$root
+    if (inherits(lower, "try-errer")) lower <- NaN
+    if  (inherits(upper, "try-errer")) upper <- NaN
+    if(alternative=="greater")
+      return(c(lower, Inf))
+    if(alternative=="less")
+      return(c(-Inf, upper))
+  }
+
+  #tretament_original
+
+  to<- data[data$Type == "RCT" & data$stud_number == 1,]$log_te
+  tr<- data[data$Type == "Pooled RWE" & data$stud_number == 1,]$log_te
+
+  so<- data[data$Type == "RCT" & data$stud_number == 1,]$se_log_te
+  sr<- data[data$Type == "Pooled RWE" & data$stud_number == 1,]$se_log_te
+
+  ciS <- ciSceptical(to=to, tr=tr, so=so, sr=sr, alternative="less")
+
+  CI_Lower<-ciS[1]
+  CI_Upper<-ciS[2]
+
+
+  for (i in 2:29){
+
+    to<- data[data$Type == "RCT" & data$stud_number == i,]$log_te
+    tr<- data[data$Type == "Pooled RWE" & data$stud_number == i,]$log_te
+
+    so<- data[data$Type == "RCT" & data$stud_number == i,]$se_log_te
+    sr<- data[data$Type == "Pooled RWE" & data$stud_number == i,]$se_log_te
+
+    ciS <- ciSceptical(to=to, tr=tr, so=so, sr=sr, alternative="less")
+
+    CI_Lower<-c(CI_Lower,ciS[1])
+    CI_Upper<-c(CI_Upper,ciS[2])
+
+  }
+
+  stud_number<-rep(1:29)
+  Type<- rep("CI scep P",29)
+  Trial<- data[data$Type == "RCT",]$Trial
+  study_type<-data[data$Type == "RCT",]$study_type
+  margin<-data[data$Type == "RCT",]$margin
+
+
+  Lower<-exp(CI_Lower)
+  Upper<-exp(CI_Upper)
+
+  dat_CI<-data.frame(stud_number,Trial,Type, Lower, Upper,study_type,margin)
+
+  data_new<-bind_rows(data_new,dat_CI)
+
+  data_new <- arrange(data_new, stud_number)
+
+  data_new
+
+
+
+
 
   
